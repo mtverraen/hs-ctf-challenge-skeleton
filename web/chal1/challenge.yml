@@ -1,0 +1,34 @@
+name: "chal1"
+author: "mtverraen"
+
+category: web
+description: |
+    This is an example challenge with a multiline description
+
+    Can you log into this site? 
+    
+    <a href="http://chal1.heltsikker.no">chal1.heltsikker.no</a>
+value: 500
+type: dynamic
+decay: 15
+minimum: 100
+
+flags:
+- FLG{example_flag} 
+tags:
+- web
+- easy
+version: '0.1'
+hints:
+- This is a hint (optional)
+state: hidden
+
+replicas: 2
+containers:
+  server:
+    build: .
+    ports:
+    - containerPort: 80
+exposeHttp:
+- containerPort: 80
+host: chal1.heltsikker.no

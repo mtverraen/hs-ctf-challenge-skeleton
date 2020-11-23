@@ -1,0 +1,73 @@
+name: Deploy to CTFd & gcloud
+on:
+  push:
+    branches: [ main ]
+jobs:
+  deploy_to_ctfd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+
+      - uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GKE_SA_KEY }}
+          project_id: evry-tverraen
+          export_default_credentials: true
+
+      # Configure Docker to use the gcloud command-line tool as a credential
+      # helper for authentication
+      - run: |-
+          gcloud --quiet auth configure-docker
+      # Get the GKE credentials so we can deploy to the cluster
+      - run: |-
+          gcloud container clusters get-credentials "${{ secrets.GKE_CLUSTER_NAME }}" --zone "${{ secrets.GKE_CLUSTER_ZONE }}"
+      - name: Setup csivitu/ctfcli
+        run: ./ctfd-init
+
+      - name: Install requirements
+        run: pip3 install pyyaml
+
+      - name: Deploy
+        env:
+          CTFD_TOKEN: ${{ secrets.CTFD_TOKEN }}
+          CTFD_URL: ${{ secrets.CTFD_URL }}
+        run: cd $GITHUB_WORKSPACE && python3 ctfd.py
+
+  deploy_to_gke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: git fetch --all --tags
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+
+      #- run: npm install -g ctfup
+      - run: npm install -g git+https://github.com/mtverraen/ctfup.git
+         # Setup gcloud CLI
+      - uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GKE_SA_KEY }}
+          project_id: evry-tverraen
+          export_default_credentials: true
+
+      # Configure Docker to use the gcloud command-line tool as a credential
+      # helper for authentication
+      - run: |-
+          gcloud --quiet auth configure-docker
+      # Get the GKE credentials so we can deploy to the cluster
+      - run: |-
+          gcloud container clusters get-credentials "${{ secrets.GKE_CLUSTER_NAME }}" --zone "${{ secrets.GKE_CLUSTER_ZONE }}"
+      - name: Deploy
+        run: |
+          echo ${{ env.COMMITHASH }}
+          ctfup -c ctfup.yml -d ${{ env.COMMITHASH }} .
+        env:
+          COMMITHASH: $(git rev-list -n 1 latest)
+  
+      - run: |
+          git config --global user.email "mtverraen@gmail.com"
+          git config --global user.name "mtverraen"
+          git tag -fa latest -m "feat:Update latest tag"
+          git push -f origin latest

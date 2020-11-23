@@ -1,0 +1,13 @@
+# remember: use folder names. NOT challenge names
+wave1:
+  web:
+    - a3
+  crypto:
+    - exclusive
+    - totally-not-spam
+  misc:
+    - linuwux
+  pwn:
+    - backdoor
+  reversing:
+    - passwordchecker9001

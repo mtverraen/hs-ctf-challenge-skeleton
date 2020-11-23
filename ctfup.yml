@@ -1,0 +1,15 @@
+categories:
+  - "web"
+  - "pwn"
+  - "crypto"
+  - "reversing"
+  - "misc"
+registry: "gcr.io/registry"
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 100Mi
+  requests:
+    cpu: 100m
+    memory: 100Mi
